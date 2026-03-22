@@ -1,41 +1,51 @@
-﻿using System;
+using System;
 
 namespace GME1011A3
 {
     internal class Fighter : Hero
     {
         private int strength;
-        private int specialPoints = 3;
 
-        public Fighter() : base() => strength = 5;
+        public Fighter() : base()
+        {
+            this.strength = 5;
+        }
 
         public Fighter(int health, string name, int strength) : base(health, name)
         {
-            if (strength < 0 || strength > 10) strength = 5;
+            if (strength < 0 || strength > 10)
+                strength = 5;
+
             this.strength = strength;
         }
 
         public override int DealDamage()
         {
-            return new Random().Next(8, 15);
+            Random rng = new Random();
+            return rng.Next(8, 15);
         }
 
-        public bool CanUseSpecial()
-        {
-            return specialPoints > 0;
-        }
+        public int GetStrength() { return this.strength; }
 
-        public int SpecialAttack()
+        public void AddStrength() { if (this.strength <= 9) strength++; }
+
+        public int Berserk()
         {
-            if (!CanUseSpecial()) return DealDamage();
-            specialPoints--;
-            Console.WriteLine("*BERSERK!*");
-            return strength * new Random().Next(5, 10);
+            if (strength > 0)
+            {
+                strength--;
+                Random rng = new Random();
+                return rng.Next(10, 20) * strength;
+            }
+            else
+            {
+                return 0;
+            }
         }
 
         public override string ToString()
         {
-            return $"Fighter[{health}, {GetName()}, str: {strength}]";
+            return "Fighter[" + base.ToString() + ", strength: " + this.strength + "]";
         }
     }
 }
