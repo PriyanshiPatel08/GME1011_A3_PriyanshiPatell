@@ -1,102 +1,176 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace GME1011A3
 {
     internal class Program
     {
-        static void Main()
+        static void Main(string[] args)
         {
-            var rng = new Random();
+            Random rng = new Random();
 
-            Console.Write("Hero name: ");
-            string heroName = Console.ReadLine() ?? "Hero";
+            Console.WriteLine("========================================");
+            Console.WriteLine("   Welcome to the Epic Hero Battle!!   ");
+            Console.WriteLine("========================================\n");
 
-            Console.Write("Health (1–150): ");
-            int.TryParse(Console.ReadLine(), out int hp);
-            hp = (hp < 1 || hp > 150) ? 100 : hp;
+            
+            Console.Write("Enter your hero's name: ");
+            string heroName = Console.ReadLine();
+            if (heroName == null || heroName.Trim() == "")
+                heroName = "unnamed hero";
 
-            Console.Write("Type (Fighter, Healer, Archer): ");
-            string type = Console.ReadLine()?.Trim().ToLower() ?? "fighter";
-
-            Console.Write("Stat (1–10): ");
-            int.TryParse(Console.ReadLine(), out int stat);
-            if (stat < 1 || stat > 10) stat = 5;
-
-            Hero hero = type switch
+            int heroHealth = 0;
+            Console.Write("Enter your hero's health (1-100): ");
+            while (!int.TryParse(Console.ReadLine(), out heroHealth) || heroHealth < 1 || heroHealth > 100)
             {
-                "healer" => new Healer(hp, heroName, stat),
-                "archer" => new Archer(hp, heroName, stat),
-                _ => new Fighter(hp, heroName, stat),
-            };
-
-            Console.WriteLine($"\nYour hero: {hero}\n");
-
-            Console.Write("Number of enemies (1–10): ");
-            int.TryParse(Console.ReadLine(), out int num);
-            if (num < 1 || num > 10) num = 5;
-
-            var baddies = new List<Minion>();
-            for (int i = 0; i < num; i++)
-            {
-                int roll = rng.Next(4);
-                baddies.Add(roll switch
-                {
-                    0 => new Goblin(rng.Next(25, 36), rng.Next(1, 6), rng.Next(1, 11)),
-                    1 => new Skellie(rng.Next(25, 31)),
-                    2 => new SneakyMinion(rng.Next(20, 31), rng.Next(0, 4), rng.Next(1, 11)),
-                    _ => new Archer(rng.Next(22, 33), "EnemyArcher", rng.Next(1, 11)),
-                });
+                Console.Write("Please enter a number between 1 and 100: ");
             }
 
-            Console.WriteLine("\nEnemies:");
-            for (int i = 0; i < baddies.Count; i++)
-                Console.WriteLine($"#{i + 1}: {baddies[i]}");
-
-            Console.WriteLine("\nBattle begins!");
-            while (!hero.isDead() && baddies.Exists(m => !m.isDead()))
+            int heroStrength = 0;
+            Console.Write("Enter your hero's strength (1-10): ");
+            while (!int.TryParse(Console.ReadLine(), out heroStrength) || heroStrength < 1 || heroStrength > 10)
             {
-                int idx = baddies.FindIndex(m => !m.isDead());
-                var enemy = baddies[idx];
+                Console.Write("Please enter a number between 1 and 10: ");
+            }
 
-                Console.WriteLine($"\n{hero.GetName()} attacks #{idx + 1} ({enemy.GetType().Name})");
+            int numBaddies = 0;
+            Console.Write("How many enemies do you want to face? (1-10): ");
+            while (!int.TryParse(Console.ReadLine(), out numBaddies) || numBaddies < 1 || numBaddies > 10)
+            {
+                Console.Write("Please enter a number between 1 and 10: ");
+            }
 
-                int heroDamage;
-                bool heroSpecialOk = hero is Fighter f1 && f1.CanUseSpecial() || hero is Archer a1 && a1.CanUseSpecial();
-                if (rng.Next(100) < 33 && heroSpecialOk)
-                    heroDamage = hero is Fighter f2 ? f2.SpecialAttack() : (hero is Archer a2 ? a2.SpecialAttack() : hero.DealDamage());
-                else
-                    heroDamage = hero.DealDamage();
+            Fighter hero = new Fighter(heroHealth, heroName, heroStrength);
+            Console.WriteLine("\nHere is our heroic hero: " + hero);
+            Console.WriteLine();
 
-                Console.WriteLine($"Hero deals {heroDamage} damage.");
-                enemy.TakeDamage(heroDamage);
+            int numAliveBaddies = numBaddies;
 
-                if (enemy.isDead())
+            List<Minion> baddies = new List<Minion>();
+            for (int i = 0; i < numBaddies; i++)
+            {
+                int roll = rng.Next(1, 4);
+
+                if (roll == 1)
                 {
-                    Console.WriteLine($"Enemy #{idx + 1} defeated!");
+                    baddies.Add(new Goblin(rng.Next(30, 35), rng.Next(1, 5), rng.Next(1, 10)));
+                }
+                else if (roll == 2)
+                {
+                    baddies.Add(new Skellie(rng.Next(25, 31), 0));
                 }
                 else
                 {
-                    int enemyDamage = rng.Next(100) < 33 ? enemy switch
-                    {
-                        Goblin g => g.GoblinBite(),
-                        Skellie s => s.SkellieRattle(),
-                        SneakyMinion sm => sm.SneakyStab(),
-                        Archer a3 => a3.ArrowShot(),
-                        _ => enemy.DealDamage()
-                    } : enemy.DealDamage();
+                    baddies.Add(new Vampire(rng.Next(28, 35), rng.Next(1, 4), rng.Next(3, 8)));
+                }
+            }
 
-                    Console.WriteLine($"Enemy deals {enemyDamage} damage.");
-                    hero.TakeDamage(enemyDamage);
-                    Console.WriteLine($"{hero.GetName()} has {hero.GetHealth()} HP left.");
+            Console.WriteLine("Here are the baddies you'll be fighting:");
+            for (int i = 0; i < baddies.Count; i++)
+            {
+                Console.WriteLine("  Enemy #" + (i + 1) + ": " + baddies[i]);
+            }
+
+            Console.WriteLine("\n\nLet the EPIC battle begin!!");
+            Console.WriteLine("----------------------------\n");
+
+            while (numAliveBaddies > 0 && !hero.isDead())
+            {
+                
+                int indexOfEnemy = 0;
+                while (baddies[indexOfEnemy].isDead())
+                {
+                    indexOfEnemy++;
+                }
+
+                Console.WriteLine(hero.GetName() + " is facing enemy #" + (indexOfEnemy + 1) +
+                    " of " + numBaddies + " -- it's a " + baddies[indexOfEnemy].GetType().Name + "!");
+
+                int heroDamage = 0;
+                int specialRoll = rng.Next(1, 4);
+
+                if (specialRoll == 1 && hero.GetStrength() > 0)
+                {
+                    heroDamage = hero.Berserk();
+                    Console.WriteLine("  >> " + hero.GetName() + " goes BERSERK!! Deals " + heroDamage + " damage!");
+                }
+                else
+                {
+                    if (specialRoll == 1 && hero.GetStrength() <= 0)
+                    {
+                        Console.WriteLine("  (Out of strength! Can't go berserk - using regular attack)");
+                    }
+                    heroDamage = hero.DealDamage();
+                    Console.WriteLine("  " + hero.GetName() + " attacks for " + heroDamage + " damage.");
+                }
+
+                baddies[indexOfEnemy].TakeDamage(heroDamage);
+
+                if (baddies[indexOfEnemy].isDead())
+                {
+                    numAliveBaddies--;
+                    Console.WriteLine("  Enemy #" + (indexOfEnemy + 1) + " has been defeated!!");
+                    
+                    if (!hero.isDead() && numAliveBaddies > 0)
+                    {
+                        int healAmount = rng.Next(3, 8);
+                        hero.Heal(healAmount);
+                        Console.WriteLine("  (Victory rush! " + hero.GetName() + " recovers " + healAmount + " health.)");
+                    }
+                }
+                else
+                {
+                    int baddieDamage = 0;
+                    int minionSpecialRoll = rng.Next(1, 4);
+
+                    if (minionSpecialRoll == 1)
+                    {
+                        if (baddies[indexOfEnemy] is Goblin goblin)
+                        {
+                            baddieDamage = goblin.GoblinBite();
+                        }
+                        else if (baddies[indexOfEnemy] is Skellie skellie)
+                        {
+                            baddieDamage = skellie.SkellieRattle();
+                        }
+                        else if (baddies[indexOfEnemy] is Vampire vampire)
+                        {
+                            baddieDamage = vampire.BloodDrain();
+                        }
+                        else
+                        {
+                            baddieDamage = baddies[indexOfEnemy].DealDamage();
+                        }
+                    }
+                    else
+                    {
+                        baddieDamage = baddies[indexOfEnemy].DealDamage();
+                        Console.WriteLine("  Enemy #" + (indexOfEnemy + 1) + " attacks for " + baddieDamage + " damage!");
+                    }
+
+                    hero.TakeDamage(baddieDamage);
+
+                    Console.WriteLine("  " + hero.GetName() + " has " + hero.GetHealth() + " health remaining.");
 
                     if (hero.isDead())
-                        Console.WriteLine("\nHero has fallen. Game over!");
+                    {
+                        Console.WriteLine("\n  " + hero.GetName() + " has fallen. The darkness wins...");
+                    }
                 }
+
+                Console.WriteLine("-----------------------------------------");
             }
 
             if (!hero.isDead())
-                Console.WriteLine("\nAll enemies defeated! Victory!");
+            {
+                Console.WriteLine("\n  All enemies have been defeated!!");
+                Console.WriteLine("  " + hero.GetName() + " is VICTORIOUS with " + hero.GetHealth() + " health remaining!");
+                Console.WriteLine("\n  *** GLORY TO THE HERO!! ***");
+            }
+            else
+            {
+                Console.WriteLine("\n  Game over. Better luck next time...");
+            }
         }
     }
 }
