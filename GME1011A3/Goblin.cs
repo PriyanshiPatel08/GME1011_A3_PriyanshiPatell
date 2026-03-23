@@ -1,39 +1,47 @@
-﻿using System;
+using System;
 
 namespace GME1011A3
 {
     internal class Goblin : Minion
     {
-        private int dexterity;
+        private int _dexterity;
 
-        public Goblin(int health, int armour, int dexterity)
-            : base(health, armour)
+        public Goblin(int health, int armour, int dexterity) : base(health, armour)
         {
-            this.dexterity = (dexterity < 0 || dexterity > 10) ? 5 : dexterity;
+            if (dexterity < 0 || dexterity > 10)
+                dexterity = 5;
+            _dexterity = dexterity;
         }
 
         public override void TakeDamage(int damage)
         {
-            if (new Random().Next(1, 15) < dexterity)
-                Console.WriteLine("*Goblin dodges!*");
+            Random rng = new Random();
+            if (rng.Next(1, 15) < _dexterity)
+            {
+                Console.WriteLine("**Goblin-dodge, sneaky**");
+            }
             else
             {
-                int actual = damage - armour;
-                if (actual < 0) actual = 0;
-                health -= actual;
+                _health -= (damage - _armour);
             }
         }
 
-        public override int DealDamage() =>
-            new Random().Next(1, dexterity + 1);
+        public override int DealDamage()
+        {
+            Random rng = new Random();
+            return rng.Next(1, _dexterity) + 1;
+        }
 
         public int GoblinBite()
         {
-            Console.WriteLine("*CHOMP!*");
-            return dexterity * new Random().Next(1, 3);
+            Console.WriteLine("  *** CHOMP! The goblin bites!! ***");
+            Random rng = new Random();
+            return _dexterity * rng.Next(1, 3);
         }
 
-        public override string ToString() =>
-            $"Goblin[{health}, {armour}, dexterity: {dexterity}]";
+        public override string ToString()
+        {
+            return "Goblin[" + base.ToString() + ", dex: " + _dexterity + "]";
+        }
     }
 }
